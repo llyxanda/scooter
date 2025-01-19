@@ -24,8 +24,8 @@ function App() {
 
 
   useEffect(() => {
-    socket.on("joinScooter", (data) => {
-      console.log("Received joinScooter event data:", data);
+    socket.on("scooterJoined", (data) => {
+      console.log("Received scooterJoined event data:", data);
       if (data) {
         setScooterId(data.scooterId);
         setEmail(data.email);
@@ -37,7 +37,7 @@ function App() {
     });
   
     return () => {
-      socket.off("joinScooter");
+      socket.off("scooterJoined");
     };
   }, []);
   
