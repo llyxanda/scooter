@@ -12,10 +12,31 @@
   gap: 20px;
 }
 
-button {
+.start-button {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
+  border-radius: 10%;
+  background-color:  #395557f7;
+  color: #FBF4EC;
+}
+
+.stop-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 10%;
+  background-color:   #f75a5a;
+  color: #FBF4EC;
+}
+
+.park-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 10%;
+  background-color:   #304748ba;
+  color: #FBF4EC;
 }
 
 button:disabled {

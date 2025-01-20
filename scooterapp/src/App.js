@@ -48,7 +48,7 @@ function App() {
     }
   }, [longitude]);
 
-  // Handle joining the scooter
+  /*// Handle joining the scooter
   const handleJoinScooter = () => {
     if (scooterId && email) {
       socket.emit("joinScooter", { scooterId, email, current_location:{ lat: latitude, lon: longitude } });
@@ -56,9 +56,10 @@ function App() {
     } else {
       alert("Please enter both Scooter ID and Email.");
     }
-  };
+  };*/
 
   const emitLocation = () => {
+    console.log("Emit Location Check:", { scooterId, email, latitude, longitude });
     if (scooterId && email && !isNaN(latitude) && !isNaN(longitude)) {
       const location = { lat: latitude, lon: longitude };
       socket.emit("moving", { scooterId, current_location: location, email });
@@ -96,8 +97,6 @@ function App() {
         alert("Please ensure the speed is a valid number.");
       }
     };
-  
-  
 
   // Start tracking the scooter
   const handleStartTracking = () => {
@@ -147,33 +146,6 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Scooter Tracker</h1>
-
-      <div>
-        <label htmlFor="scooterId">Scooter ID:</label>
-        <input
-          type="text"
-          id="scooterId"
-          placeholder="Enter Scooter ID"
-          value={scooterId}
-          onChange={(e) => setScooterId(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="email">Your Email:</label>
-        <input
-          type="email"
-          id="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
-      <button onClick={handleJoinScooter}>Join Scooter</button>
-
-      <hr />
 
       <h3>Move the Scooter</h3>
       <label htmlFor="latitude">Latitude:</label>
@@ -221,13 +193,13 @@ function App() {
       />
 
       <div className="control-buttons">
-        <button onClick={handleStartTracking} disabled={isTracking}>
+        <button onClick={handleStartTracking} disabled={isTracking} className="start-button">
           Start
         </button>
-        <button onClick={handleStopTracking} disabled={!isTracking}>
+        <button onClick={handleStopTracking} disabled={!isTracking} className="stop-button">
           Stop
         </button>
-        <button onClick={handlePark} disabled={isTracking}>Park</button>
+        <button onClick={handlePark} disabled={isTracking} className="park-button">Park</button>
       </div>
 
       <h3>Status:</h3>

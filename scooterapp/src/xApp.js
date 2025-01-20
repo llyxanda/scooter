@@ -15,9 +15,38 @@ function App() {
   const [status, setStatus] = useState("Waiting for data...");
   const [isTracking, setIsTracking] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
-  const [totalDistance, setTotalDistance] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [battery, setBattery] = useState(70);
+  const [lastSpeedChangeTime, setLastSpeedChangeTime] = useState(null);
+  const [totalWeightedSpeed, setTotalWeightedSpeed] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+  const [avgSpeed, setAvgSpeed] = useState(0);
+
+
+  useEffect(() => {
+    if (scooterId && !isNaN(speed)) {
+      handleSendSpeed();
+    }
+  }, [speed]);
+  
+  useEffect(() => {
+    if (scooterId && !isNaN(battery)) {
+      handleSendBattery();
+    }
+  }, [battery]);
+
+
+  useEffect(() => {
+    if (scooterId && !isNaN(latitude)) {
+      emitLocation();
+    }
+  }, [latitude]);
+  
+  useEffect(() => {
+    if (scooterId && !isNaN(longitude)) {
+      emitLocation();
+    }
+  }, [longitude]);
 
   // Handle joining the scooter
   const handleJoinScooter = () => {
@@ -40,18 +69,26 @@ function App() {
   };
 
 
-  // Handle sending speed to the server
   const handleSendSpeed = () => {
-    if (scooterId && !isNaN(speed)) {
-      socket.emit("speedchange", { scooterId, speed });
-      setStatus(`Sent speed: ${speed} km/h`);
-    } else {
-      alert("Please ensure the speed is a valid number.");
+    const currentTime = Date.now();
+  
+    if (lastSpeedChangeTime) {
+      const elapsedTime = (currentTime - lastSpeedChangeTime) / 1000; // Convert ms to seconds
+      setTotalWeightedSpeed(
+        (prev) => prev + speed * elapsedTime
+      );
+      setTotalTime((prev) => prev + elapsedTime);
     }
+    
+    setLastSpeedChangeTime(currentTime);
+  
+    socket.emit("speedchange", { scooterId, speed });
+    setStatus(`Sent speed: ${speed} km/h. ${totalTime}. ${totalWeightedSpeed}. ${lastSpeedChangeTime}`);
   };
+  
 
-    // Handle sending speed to the server
-    const handleSendBattery = () => {
+  // Handle sending speed to the server
+  const handleSendBattery = () => {
       if (scooterId && !isNaN(battery)) {
         socket.emit("batterychange", { scooterId, battery });
         setStatus(`Sent batery: ${battery} %`);
@@ -75,6 +112,10 @@ function App() {
     setIsTracking(false);
     setStatus("Scooter stopped.");
 
+    const avgSpeed = totalTime > 0 ? totalWeightedSpeed / totalTime : 0;
+    setAvgSpeed(avgSpeed);
+    setStatus(`Trip ended. Average Speed: ${avgSpeed.toFixed(2)} km/h`);
+
     // Clear the interval if it exists
     if (intervalId) {
       clearInterval(intervalId);
@@ -88,75 +129,14 @@ function App() {
     setStatus("Scooter parked.");
     const location = { lat: latitude, lon: longitude };
     const endTime = Date.now();
-    const totalTimeInHours = (endTime - startTime) / (1000 * 60 * 60); // Convert ms to hours
-    const avgSpeed = totalDistance / totalTimeInHours || 0;
     const cost = (endTime - startTime) / (1000 * 60)*20;
     socket.emit("endTrip", { scooterId, email, current_location:location, avg_speed: avgSpeed, cost: cost });
-    //Send a status update to backend to set status to inactive
     //Dissconect the user
 
     // Clear the interval if it exists
     if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null); // Reset the interval ID
-    }
-  };
-
-  // Update latitude and longitude based on button clicks
-  const handleLeftClick = () => {
-    // Move the scooter left by decreasing latitude
-    const newLatitude = latitude - 0.0001 * speed;
-    setLatitude(newLatitude);
-    setStatus(`Moved left: Latitude = ${newLatitude}`);
-    if (isTracking) {
-      emitLocation(); // Emit the location whenever a direction button is pressed
-    }
-  };
-
-  const handleRightClick = () => {
-    // Move the scooter right by increasing latitude
-    const newLatitude = latitude + 0.0001 * speed;
-    setLatitude(newLatitude);
-    setStatus(`Moved right: Latitude = ${newLatitude}`);
-    if (isTracking) {
-      emitLocation(); // Emit the location whenever a direction button is pressed
-    }
-  };
-
-  const handleForwardClick = () => {
-    // Move the scooter forward by increasing longitude
-    const earthCircumferencePerDegree = 111.32; // Distance for 1 degree at the equator (km)
-  
-    // Calculate the distance covered by 1 degree of longitude at the given latitude
-    const distancePerDegree = earthCircumferencePerDegree * Math.cos(latitude * (Math.PI / 180));
-    
-    // Calculate the change in longitude
-    const longitudeChange = (speed / distancePerDegree) * 1/3600;
-    const newLongitude = longitude + longitudeChange;
-    setLongitude(newLongitude);
-    setStatus(`Moved forward: Longitude = ${newLongitude}`);
-    if (isTracking) {
-      const id = setInterval(() => {
-        emitLocation();
-        clearInterval(id);
-        setIntervalId(null);
-      }, 1000);
-      setIntervalId(id);
-      const distance = getDistance(
-        { latitude, longitude },
-        { latitude, longitude: newLongitude }
-      ) / 1000;
-      setTotalDistance((prev) => prev + distance);
-    }
-  };
-
-  const handleBackwardClick = () => {
-    // Move the scooter backward by decreasing longitude
-    const newLongitude = longitude - 0.001 * speed; // Adjusting by speed (0.001 per km/h)
-    setLongitude(newLongitude);
-    setStatus(`Moved backward: Longitude = ${newLongitude}`);
-    if (isTracking) {
-      emitLocation(); // Emit the location whenever a direction button is pressed
     }
   };
 
@@ -228,10 +208,7 @@ function App() {
         id="speed"
         value={speed}
         step="any"
-        onChange={(e) => {
-          setSpeed(parseFloat(e.target.value));
-          handleSendSpeed();
-        }}
+        onChange={(e) => setSpeed(parseFloat(e.target.value))}
       />
       <br />
       <label htmlFor="battery">Battery:</label>
@@ -240,10 +217,7 @@ function App() {
         id="battery"
         value={battery}
         step="any"
-        onChange={(e) => {
-          setBattery(parseFloat(e.target.value));
-          handleSendBattery();
-        }}
+        onChange={(e) => setBattery(parseFloat(e.target.value))}
       />
 
       <div className="control-buttons">
@@ -253,23 +227,12 @@ function App() {
         <button onClick={handleStopTracking} disabled={!isTracking}>
           Stop
         </button>
-        <button onClick={handlePark}>Park</button>
+        <button onClick={handlePark} disabled={isTracking}>Park</button>
       </div>
 
       <h3>Status:</h3>
       <pre>{status}</pre>
 
-      {/* Cross Layout for Controls */}
-      <div className="controls">
-        <div className="vertical">
-          <button onClick={handleForwardClick}>Forward</button>
-          <button onClick={handleBackwardClick}>Backward</button>
-        </div>
-        <div className="horizontal">
-          <button onClick={handleLeftClick}>Left</button>
-          <button onClick={handleRightClick}>Right</button>
-        </div>
-      </div>
     </div>
   );
 }
