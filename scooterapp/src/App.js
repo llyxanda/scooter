@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import "./App.css";
-import { getDistance } from 'geolib';
+
 
 // Connect to the backend socket
 const socket = io("http://localhost:8585");
@@ -113,7 +113,7 @@ function App() {
 
     const avgSpeed = totalTime > 0 ? totalWeightedSpeed / totalTime : 0;
     setAvgSpeed(avgSpeed);
-    setStatus(`Trip ended. Average Speed: ${avgSpeed.toFixed(2)} km/h`);
+    setStatus(`Trip stopped. Average Speed: ${avgSpeed.toFixed(2)} km/h`);
 
     // Clear the interval if it exists
     if (intervalId) {
@@ -127,9 +127,7 @@ function App() {
     setIsTracking(false);
     setStatus("Scooter parked.");
     const location = { lat: latitude, lon: longitude };
-    const endTime = Date.now();
-    const cost = (endTime - startTime) / (1000 * 60)*20;
-    socket.emit("endTrip", { scooterId, email, current_location:location, avg_speed: avgSpeed, cost: cost });
+    socket.emit("endTrip", { scooterId, email, current_location:location, avg_speed: avgSpeed});
     //Dissconect the user
 
     // Clear the interval if it exists
@@ -138,6 +136,12 @@ function App() {
       setIntervalId(null); // Reset the interval ID
     }
   };
+
+  useEffect(() => {
+    socket.on("tripEnded", ({ scooterId, cost }) => {
+      setStatus(`Trip ended for scooter ${scooterId}. Total cost: ${cost.toFixed(2)}.`);
+    });
+  }, []);
 
   socket.on("receivechangingspeed", (speed) => {
     setStatus(`Scooter speed updated: ${speed} km/h`);
