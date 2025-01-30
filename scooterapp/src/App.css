@@ -1,10 +1,21 @@
-.container {
+/*.container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  height: 100vh;
+  background-color: #FBF4EC;
   padding: 20px;
+  text-align: center;
+}
+
+.container input {
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
 }
 
 .control-buttons {
@@ -35,7 +46,7 @@
   font-size: 16px;
   cursor: pointer;
   border-radius: 10%;
-  background-color:   #304748ba;
+  background-color: rgb(41, 41, 41);
   color: #FBF4EC;
 }
 
@@ -67,4 +78,75 @@ button:disabled {
 input {
   margin: 10px;
   padding: 5px;
+}
+*/
+.container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fffefe;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+p {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
+
+input, select {
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+button {
+  padding: 40px 40px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 10%;
+  background-color:  #395557f7;
+  color: #FBF4EC;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+pre {
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.start-button {
+  background-color:#f75a5a;
+}
+
+.start-button:disabled {
+  background: #f97e7e;
+  cursor: not-allowed;
 }
