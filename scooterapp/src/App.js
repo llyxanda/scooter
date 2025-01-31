@@ -18,7 +18,7 @@ function App() {
   const [isParked, setIsParked] = useState(false);
   const [direction, setDirection] = useState("N"); 
   const [warning, setWarning] = useState("");
-  const [atStation, setAtStation] = useState("");
+  const [scooterStatus, setScooterStatus ] = useState("");
 
   useEffect(() => {
     socket.on("scooterJoined", (data) => {
@@ -28,9 +28,10 @@ function App() {
         setLongitude(data.current_location.lon);
         setLatitude(data.current_location.lat);
         setBattery(data.battery_level);
-        setAtStation(data.at_station);
+        setScooterStatus(data.status);
+        //setAtStation(data.at_station);
   
-        if (atStation !== null && atStation !== "null" && atStation !== "") {
+        if (data.status === "charging") {
           setWarning("⚠️ The scooter is charging, you can't use it.");
           setIsParked(true);
         } else {
@@ -87,12 +88,12 @@ function App() {
     setBattery((prevBattery) => Math.max(0, prevBattery - batteryDrain));
 
     if (battery - batteryDrain <= 20) {
-      setWarning("Low battery!  Consider choosing another scooter.");
+      setWarning("⚠️ Low battery!  Consider choosing another scooter.");
     }
 
     if (battery - batteryDrain <= 0) {
       handleStopTracking();
-      setStatus("Battery empty! Scooter stopped.");
+      setStatus("⚠️ Battery empty! Scooter stopped.");
     }
   };
 
@@ -112,6 +113,7 @@ function App() {
   return (
     <div className="container">
       <h3>Move the Scooter</h3>
+      <h2>{scooterId}</h2>
 
 
       <p><strong>Latitude:</strong> {latitude.toFixed(5)}</p>
@@ -123,13 +125,13 @@ function App() {
       </p>
 
       <p style={{ 
-                  color: atStation ? "red" : "green", 
+                  color: scooterStatus === "charging" ? "red" : "green", 
                   display: "flex", 
                   alignItems: "center", 
                   gap: "5px" 
                 }}>
-          <AiFillBulb size={24} color={atStation ? "red" : "green"} />
-          <strong>At Station:</strong> {atStation ? "Yes" : "No"}
+          <AiFillBulb size={24} color={scooterStatus === "charging" ? "red" : "green"} />
+          <strong>charging:</strong> {scooterStatus === "charging" ? "Yes" : "No"}
         </p>
 
       
