@@ -73,9 +73,10 @@ function App() {
 
   const emitLocation = () => {
     if (scooterId && email) {
-      socket.emit("moving", { scooterId, current_location: { lat: latitude, lon: longitude }, email });
-      setStatus(`Sent location: Latitude: ${latitude}, Longitude: ${longitude}`);
-    }
+      if (scooterStatus !== "charging")
+        socket.emit("moving", { scooterId, current_location: { lat: latitude, lon: longitude }, email });
+        setStatus(`Sent location: Latitude: ${latitude}, Longitude: ${longitude}`);
+      }
   };
 
   const handleStartTracking = () => {
