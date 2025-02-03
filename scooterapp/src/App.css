@@ -150,3 +150,14 @@ pre {
   background: #f97e7e;
   cursor: not-allowed;
 }
+
+.charge-button {
+  background-color:#d7d746;
+  padding: 10px 20px;
+  margin-top: 10px;
+}
+
+.charge-button:disabled {
+  background-color: #f4f496;
+  color: #ccc;
+}
