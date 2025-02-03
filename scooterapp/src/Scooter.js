@@ -56,7 +56,7 @@ function Scooter() {
   }, [isTracking]);
 
   useEffect(() => {
-    socket.emit("joinScooter", {type:'scooter', scooterId});
+
     socket.on("scooterJoined", (data) => {
       console.log('scooterJoined')
       console.log('Data: ', data, socket.id, scooterId)
@@ -92,14 +92,14 @@ function Scooter() {
 
 
   useEffect(() => {
-    if (!scooterId || !email || !battery) return;
+    if (!scooterId || !email || !battery || !isTracking) return;
   
     const interval = setInterval(() => {
       socket.emit("batterychange", { scooterId, battery });
     }, 3000); // Emit every 3 seconds
   
     return () => clearInterval(interval); // Cleanup when component unmounts
-  }, [scooterId, email, battery]);
+  }, [scooterId, email, battery, isTracking]);
 
   useEffect(() => {
 
@@ -118,6 +118,19 @@ function Scooter() {
     });
 
     return () => socket.off("statusChange");
+  }, [scooterId]);
+
+
+  useEffect(() => {
+    if (scooterId) {
+        socket.emit("joinScooter", { type: "scooter", scooterId });
+    }
+
+    return () => {
+        if (scooterId) {
+            socket.emit("leaveScooter", { type: "scooter", scooterId });
+        }
+    };
   }, [scooterId]);
 
 
