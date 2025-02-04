@@ -27,7 +27,8 @@ function Scooter() {
 
 
   const emitLocation = () => {
-    if (scooterId && email && scooterStatus !== "charging") {
+    if (scooterId && email && scooterStatus !== "charging" && scooterStatus) {
+      console.log('Emiting moving', scooterId, {latitude, longitude}, scooterStatus)
       socket.emit("moving", { scooterId, current_location: { lat: latitude, lon: longitude }, email });
       setStatus(`Sent location: Latitude: ${latitude}, Longitude: ${longitude}`);
     }
@@ -61,18 +62,18 @@ function Scooter() {
       console.log('scooterJoined')
       console.log('Data: ', data, socket.id, scooterId)
       if (data.scooterId === String(scooterId)) {
-        console.log('conected', data.scooterId, String(scooterId))
+        console.log('connected', data.scooterId, String(scooterId), data.status)
         //setScooterId(data.scooterId);
         setEmail(data.email);
-        setLongitude(data.current_location.lon);
-        setLatitude(data.current_location.lat);
+        setLongitude(data.current_location.coordinates[0]);
+        setLatitude(data.current_location.coordinates[1]);
         setBattery(data.battery_level);
-        setScooterStatus(data.status);
+        setScooterStatus(data.currentstatus);
         //setAtStation(data.at_station);
-        setStatus(`User ${socket.id}: (Email: ${data.email}) joined scooter ${data.socketId}`)
-        
+        setStatus(`User ${socket.id}: (Email: ${data.email}) joined scooter ${data.scooterId}`)
   
-        if (data.status === "charging") {
+        if (scooterStatus === "charging") {
+          
           setWarning("⚠️ The scooter is charging, you can't use it.");
           setIsParked(true);
         } else {
@@ -86,19 +87,15 @@ function Scooter() {
 
 ;
 
+
+
   useEffect(() => {
     if (scooterId) emitLocation();
   }, [latitude, longitude]);
 
-
   useEffect(() => {
     if (!scooterId || !email || !battery || !isTracking) return;
-  
-    const interval = setInterval(() => {
-      socket.emit("batterychange", { scooterId, battery });
-    }, 3000); // Emit every 3 seconds
-  
-    return () => clearInterval(interval); // Cleanup when component unmounts
+    socket.emit("batterychange", { scooterId, battery });
   }, [scooterId, email, battery, isTracking]);
 
   useEffect(() => {
