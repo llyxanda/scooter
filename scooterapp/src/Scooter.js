@@ -24,6 +24,10 @@ function Scooter() {
   const [direction, setDirection] = useState("N"); 
   const [warning, setWarning] = useState("");
   const [scooterStatus, setScooterStatus ] = useState("");
+  const [lastSpeedChangeTime, setLastSpeedChangeTime] = useState(null);
+  const [totalWeightedSpeed, setTotalWeightedSpeed] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+  const [avgSpeed, setAvgSpeed] = useState(0);
 
 
   const emitLocation = () => {
@@ -136,11 +140,30 @@ function Scooter() {
   };
 
   const handleSpeed = (adjustedSpeed) => {
-  
-    setSpeed(adjustedSpeed);
-    socket.emit("speedchange", { scooterId, speed: adjustedSpeed });
+    // Cap speed at 30 km/h before updating state
+    //const adjustedSpeed = newSpeed > 30 ? 30 : newSpeed;
 
+    setSpeed(adjustedSpeed)
+    speedCalc();
+    socket.emit("speedchange", { scooterId, speed: adjustedSpeed });
+    //setSpeedcontroll(`Scooter speed updated: ${adjustedSpeed} km/h`);
   };
+
+  const speedCalc = () => {
+    const currentTime = Date.now();
+  
+    if (lastSpeedChangeTime) {
+      const elapsedTime = (currentTime - lastSpeedChangeTime) / 1000;
+      setTotalWeightedSpeed(
+        (prev) => prev + speed * elapsedTime
+      );
+      setTotalTime((prev) => prev + elapsedTime);
+    }
+    
+    setLastSpeedChangeTime(currentTime);
+    setStatus(`Sent speed: ${speed} km/h. ${totalTime}. ${totalWeightedSpeed}. ${lastSpeedChangeTime}`);
+  };
+  
 
   useEffect(() => {
     socket.on("receivechangingspeed", (speed) => {
@@ -189,7 +212,10 @@ function Scooter() {
     setIsTracking(false);
     setIsParked(true);
     setStatus("Scooter parked.");
-    socket.emit("endTrip", { scooterId, email, current_location: { lat: latitude, lon: longitude }, battery  });
+    const avgSpeed = totalTime > 0 ? totalWeightedSpeed / totalTime : 0;
+    setAvgSpeed(avgSpeed);
+    setStatus(`Trip stopped. Average Speed: ${avgSpeed.toFixed(2)} km/h`);
+    socket.emit("endTrip", { scooterId, email, current_location: { lat: latitude, lon: longitude }, avgSpeed });
   };
 
   const handleCharge = () => {
