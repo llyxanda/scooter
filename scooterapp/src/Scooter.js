@@ -87,8 +87,6 @@ function Scooter() {
 
 ;
 
-
-
   useEffect(() => {
     if (scooterId) emitLocation();
   }, [latitude, longitude]);
@@ -138,12 +136,10 @@ function Scooter() {
   };
 
   const handleSpeed = (adjustedSpeed) => {
-    // Cap speed at 30 km/h before updating state
-    //const adjustedSpeed = newSpeed > 30 ? 30 : newSpeed;
-
+  
     setSpeed(adjustedSpeed);
     socket.emit("speedchange", { scooterId, speed: adjustedSpeed });
-    //setSpeedcontroll(`Scooter speed updated: ${adjustedSpeed} km/h`);
+
   };
 
   useEffect(() => {
@@ -151,7 +147,7 @@ function Scooter() {
       console.log(`Received updated speed: ${speed}`);
 
       handleSpeed(speed);
-      //setSpeedcontroll(`Scooter speed updated: ${speed} km/h`);
+
     });
 
     return () => {
@@ -170,7 +166,7 @@ function Scooter() {
     setLatitude((prevLat) => prevLat + (direction === "N" ? deltaLatitude : direction === "S" ? -deltaLatitude : 0));
     setLongitude((prevLon) => prevLon + (direction === "E" ? deltaLongitude : direction === "W" ? -deltaLongitude : 0));
 
-    const batteryDrain = (speed * 0.001) + 0.01; // Example formula
+    const batteryDrain = (speed * 0.001) + 0.01;
     setBattery((prevBattery) => Math.max(0, prevBattery - batteryDrain));
 
     if (battery - batteryDrain <= 20) {
@@ -193,7 +189,7 @@ function Scooter() {
     setIsTracking(false);
     setIsParked(true);
     setStatus("Scooter parked.");
-    socket.emit("endTrip", { scooterId, email, current_location: { lat: latitude, lon: longitude } });
+    socket.emit("endTrip", { scooterId, email, current_location: { lat: latitude, lon: longitude }, battery  });
   };
 
   const handleCharge = () => {
@@ -236,7 +232,7 @@ function Scooter() {
       </select>
   
       <div className="control-buttons">
-        <button id="startButton" onClick={handleStartTracking} disabled={isTracking || isParked} className="start-button">Start</button>
+        <button id="startButton" onClick={handleStartTracking} disabled={isTracking || isParked || scooterStatus === "charging"} className="start-button">Start</button>
         <button id="stopButton" onClick={handleStopTracking} disabled={!isTracking}>Stop</button>
         <button id="parkButton" onClick={handlePark} disabled={isTracking}>Park</button>
       </div>
